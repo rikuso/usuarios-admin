@@ -8,17 +8,22 @@ import {
   Where,
 } from '@loopback/repository';
 import {
-  post,
-  param,
+  del,
   get,
   getModelSchemaRef,
+  param,
   patch,
+  post,
   put,
-  del,
   requestBody,
   response,
 } from '@loopback/rest';
-import {Credenciales, User} from '../models';
+import {
+  Credenciales,
+  CredencialesCambioClave,
+  RecuperarClave,
+  User,
+} from '../models';
 import {UserRepository} from '../repositories';
 import {AdministradorDeClavesService} from '../services';
 
@@ -48,9 +53,9 @@ export class UserController {
     })
     user: Omit<User, '_id'>,
   ): Promise<User> {
-    let clave = this.servicioClaves.GenerarClave();
+    const clave = this.servicioClaves.GenerarClave();
     console.log(clave);
-    let claveCifrada = this.servicioClaves.Cifrar(clave);
+    const claveCifrada = this.servicioClaves.Cifrar(clave);
     console.log(claveCifrada);
     user.clave = claveCifrada;
     return this.userRepository.create(user);
@@ -166,7 +171,7 @@ export class UserController {
   async identificar(
     @requestBody() credenciales: Credenciales,
   ): Promise<User | null> {
-    let usuario = await this.userRepository.findOne({
+    const usuario = await this.userRepository.findOne({
       where: {
         correo: credenciales.usuario,
         clave: credenciales.clave,
@@ -175,7 +180,60 @@ export class UserController {
     if (usuario) {
       // Consumir el MS de token y generar uno nuevo
       // se asignara ese token a la respuesta para el cliente
+      usuario.clave = '';
     }
     return usuario;
+  }
+  @post('/recuperar-clave', {
+    responses: {
+      '200': {
+        description: 'Recupearar clave',
+      },
+    },
+  })
+  async recuperarClave(
+    @requestBody() credencialesRecuperar: RecuperarClave,
+  ): Promise<Boolean> {
+    const usuario = await this.userRepository.findOne({
+      where: {
+        correo: credencialesRecuperar.correo,
+      },
+    });
+    if (usuario) {
+      const clave = this.servicioClaves.GenerarClave();
+      console.log(clave);
+      const claveCifrada = this.servicioClaves.Cifrar(clave);
+      console.log(claveCifrada);
+      usuario.clave = claveCifrada;
+      await this.userRepository.updateById(usuario._id, usuario);
+      // Consumir el MS de motificaciones
+      // enviar nueva clave por sms
+      return true;
+    }
+    return false;
+  }
+  @post('/cambiar-clave', {
+    responses: {
+      '200': {
+        description: 'cambiar clave',
+      },
+    },
+  })
+  async cambiarClave(
+    @requestBody() datos: CredencialesCambioClave,
+  ): Promise<Boolean> {
+    const usuario = await this.userRepository.findById(datos._id);
+    if (usuario) {
+      if (usuario.clave == datos.clave_actual) {
+        usuario.clave = datos.nueva_clave;
+        console.log(datos.nueva_clave);
+        await this.userRepository.updateById(datos._id, usuario);
+        // enviar email al usuario cambio de contraseña
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
   }
 }
