@@ -7,13 +7,13 @@ import {
   Where,
 } from '@loopback/repository';
 import {
-  post,
-  param,
+  del,
   get,
   getModelSchemaRef,
+  param,
   patch,
+  post,
   put,
-  del,
   requestBody,
   response,
 } from '@loopback/rest';
@@ -23,7 +23,7 @@ import {RolRepository} from '../repositories';
 export class RolController {
   constructor(
     @repository(RolRepository)
-    public rolRepository : RolRepository,
+    public rolRepository: RolRepository,
   ) {}
 
   @post('/rols')
@@ -52,9 +52,7 @@ export class RolController {
     description: 'Rol model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Rol) where?: Where<Rol>,
-  ): Promise<Count> {
+  async count(@param.where(Rol) where?: Where<Rol>): Promise<Count> {
     return this.rolRepository.count(where);
   }
 
@@ -70,9 +68,7 @@ export class RolController {
       },
     },
   })
-  async find(
-    @param.filter(Rol) filter?: Filter<Rol>,
-  ): Promise<Rol[]> {
+  async find(@param.filter(Rol) filter?: Filter<Rol>): Promise<Rol[]> {
     return this.rolRepository.find(filter);
   }
 
@@ -95,7 +91,7 @@ export class RolController {
     return this.rolRepository.updateAll(rol, where);
   }
 
-  @get('/rols/{id}')
+  @get('/rols/{_id}')
   @response(200, {
     description: 'Rol model instance',
     content: {
@@ -105,18 +101,18 @@ export class RolController {
     },
   })
   async findById(
-    @param.path.string('id') id: string,
-    @param.filter(Rol, {exclude: 'where'}) filter?: FilterExcludingWhere<Rol>
+    @param.path.string('_id') _id: string,
+    @param.filter(Rol, {exclude: 'where'}) filter?: FilterExcludingWhere<Rol>,
   ): Promise<Rol> {
-    return this.rolRepository.findById(id, filter);
+    return this.rolRepository.findById(_id, filter);
   }
 
-  @patch('/rols/{id}')
+  @patch('/rols/{_id}')
   @response(204, {
     description: 'Rol PATCH success',
   })
   async updateById(
-    @param.path.string('id') id: string,
+    @param.path.string('_id') _id: string,
     @requestBody({
       content: {
         'application/json': {
@@ -126,25 +122,25 @@ export class RolController {
     })
     rol: Rol,
   ): Promise<void> {
-    await this.rolRepository.updateById(id, rol);
+    await this.rolRepository.updateById(_id, rol);
   }
 
-  @put('/rols/{id}')
+  @put('/rols/{_id}')
   @response(204, {
     description: 'Rol PUT success',
   })
   async replaceById(
-    @param.path.string('id') id: string,
+    @param.path.string('_id') _id: string,
     @requestBody() rol: Rol,
   ): Promise<void> {
-    await this.rolRepository.replaceById(id, rol);
+    await this.rolRepository.replaceById(_id, rol);
   }
 
-  @del('/rols/{id}')
+  @del('/rols/{_id}')
   @response(204, {
     description: 'Rol DELETE success',
   })
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
-    await this.rolRepository.deleteById(id);
+  async deleteById(@param.path.string('_id') _id: string): Promise<void> {
+    await this.rolRepository.deleteById(_id);
   }
 }

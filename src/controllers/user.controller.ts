@@ -111,12 +111,12 @@ export class UserController {
     return this.userRepository.findById(id, filter);
   }
 
-  @patch('/users/{id}')
+  @patch('/users/{_id}')
   @response(204, {
     description: 'User PATCH success',
   })
   async updateById(
-    @param.path.string('id') id: string,
+    @param.path.string('_id') _id: string,
     @requestBody({
       content: {
         'application/json': {
@@ -126,25 +126,25 @@ export class UserController {
     })
     user: User,
   ): Promise<void> {
-    await this.userRepository.updateById(id, user);
+    await this.userRepository.updateById(_id, user);
   }
 
-  @put('/users/{id}')
+  @put('/users/{_id}')
   @response(204, {
     description: 'User PUT success',
   })
   async replaceById(
-    @param.path.string('id') id: string,
+    @param.path.string('_id') _id: string,
     @requestBody() user: User,
   ): Promise<void> {
-    await this.userRepository.replaceById(id, user);
+    await this.userRepository.replaceById(_id, user);
   }
 
-  @del('/users/{id}')
+  @del('/users/{_id}')
   @response(204, {
     description: 'User DELETE success',
   })
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
-    await this.userRepository.deleteById(id);
+  async deleteById(@param.path.string('_id') _id: string): Promise<void> {
+    await this.userRepository.deleteById(_id);
   }
 }
