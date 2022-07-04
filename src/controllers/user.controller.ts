@@ -1,3 +1,4 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -17,13 +18,16 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {User} from '../models';
+import {Credenciales, User} from '../models';
 import {UserRepository} from '../repositories';
+import {AdministradorDeClavesService} from '../services';
 
 export class UserController {
   constructor(
     @repository(UserRepository)
-    public userRepository : UserRepository,
+    public userRepository: UserRepository,
+    @service(AdministradorDeClavesService)
+    public servicioClaves: AdministradorDeClavesService,
   ) {}
 
   @post('/users')
@@ -44,6 +48,11 @@ export class UserController {
     })
     user: Omit<User, '_id'>,
   ): Promise<User> {
+    let clave = this.servicioClaves.GenerarClave();
+    console.log(clave);
+    let claveCifrada = this.servicioClaves.Cifrar(clave);
+    console.log(claveCifrada);
+    user.clave = claveCifrada;
     return this.userRepository.create(user);
   }
 
@@ -52,9 +61,7 @@ export class UserController {
     description: 'User model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(User) where?: Where<User>,
-  ): Promise<Count> {
+  async count(@param.where(User) where?: Where<User>): Promise<Count> {
     return this.userRepository.count(where);
   }
 
@@ -70,9 +77,7 @@ export class UserController {
       },
     },
   })
-  async find(
-    @param.filter(User) filter?: Filter<User>,
-  ): Promise<User[]> {
+  async find(@param.filter(User) filter?: Filter<User>): Promise<User[]> {
     return this.userRepository.find(filter);
   }
 
@@ -106,7 +111,7 @@ export class UserController {
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(User, {exclude: 'where'}) filter?: FilterExcludingWhere<User>
+    @param.filter(User, {exclude: 'where'}) filter?: FilterExcludingWhere<User>,
   ): Promise<User> {
     return this.userRepository.findById(id, filter);
   }
@@ -146,5 +151,31 @@ export class UserController {
   })
   async deleteById(@param.path.string('_id') _id: string): Promise<void> {
     await this.userRepository.deleteById(_id);
+  }
+
+  /*
+  SEGURIDAD
+  */
+  @post('/identificar-usuario', {
+    responses: {
+      '200': {
+        description: 'identificacion de usuarios',
+      },
+    },
+  })
+  async identificar(
+    @requestBody() credenciales: Credenciales,
+  ): Promise<User | null> {
+    let usuario = await this.userRepository.findOne({
+      where: {
+        correo: credenciales.usuario,
+        clave: credenciales.clave,
+      },
+    });
+    if (usuario) {
+      // Consumir el MS de token y generar uno nuevo
+      // se asignara ese token a la respuesta para el cliente
+    }
+    return usuario;
   }
 }

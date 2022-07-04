@@ -28,6 +28,12 @@ export class User extends Entity {
   })
   celular: string;
 
+  @property({
+    type: 'string',
+    required: false,
+  })
+  clave?: string;
+
   @belongsTo(() => Rol)
   rolId: string;
 
