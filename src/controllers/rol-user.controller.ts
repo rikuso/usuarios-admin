@@ -15,18 +15,15 @@ import {
   post,
   requestBody,
 } from '@loopback/rest';
-import {
-  Rol,
-  User,
-} from '../models';
+import {Rol, User} from '../models';
 import {RolRepository} from '../repositories';
 
 export class RolUserController {
   constructor(
     @repository(RolRepository) protected rolRepository: RolRepository,
-  ) { }
+  ) {}
 
-  @get('/rols/{id}/users', {
+  @get('/rols/{_id}/users', {
     responses: {
       '200': {
         description: 'Array of Rol has many User',
@@ -39,13 +36,13 @@ export class RolUserController {
     },
   })
   async find(
-    @param.path.number('id') id: number,
+    @param.path.string('_id') _id: string,
     @param.query.object('filter') filter?: Filter<User>,
   ): Promise<User[]> {
-    return this.rolRepository.users(id).find(filter);
+    return this.rolRepository.users(_id).find(filter);
   }
 
-  @post('/rols/{id}/users', {
+  @post('/rols/{_id}/users', {
     responses: {
       '200': {
         description: 'Rol model instance',
@@ -54,23 +51,24 @@ export class RolUserController {
     },
   })
   async create(
-    @param.path.number('id') id: typeof Rol.prototype.id,
+    @param.path.string('_id') _id: typeof Rol.prototype._id,
     @requestBody({
       content: {
         'application/json': {
           schema: getModelSchemaRef(User, {
             title: 'NewUserInRol',
-            exclude: ['id'],
-            optional: ['rolId']
+            exclude: ['_id'],
+            optional: ['rolId'],
           }),
         },
       },
-    }) user: Omit<User, 'id'>,
+    })
+    user: Omit<User, '_id'>,
   ): Promise<User> {
-    return this.rolRepository.users(id).create(user);
+    return this.rolRepository.users(_id).create(user);
   }
 
-  @patch('/rols/{id}/users', {
+  @patch('/rols/{_id}/users', {
     responses: {
       '200': {
         description: 'Rol.User PATCH success count',
@@ -79,7 +77,7 @@ export class RolUserController {
     },
   })
   async patch(
-    @param.path.number('id') id: number,
+    @param.path.string('_id') _id: string,
     @requestBody({
       content: {
         'application/json': {
@@ -90,10 +88,10 @@ export class RolUserController {
     user: Partial<User>,
     @param.query.object('where', getWhereSchemaFor(User)) where?: Where<User>,
   ): Promise<Count> {
-    return this.rolRepository.users(id).patch(user, where);
+    return this.rolRepository.users(_id).patch(user, where);
   }
 
-  @del('/rols/{id}/users', {
+  @del('/rols/{_id}/users', {
     responses: {
       '200': {
         description: 'Rol.User DELETE success count',
@@ -102,9 +100,9 @@ export class RolUserController {
     },
   })
   async delete(
-    @param.path.number('id') id: number,
+    @param.path.string('_id') _id: string,
     @param.query.object('where', getWhereSchemaFor(User)) where?: Where<User>,
   ): Promise<Count> {
-    return this.rolRepository.users(id).delete(where);
+    return this.rolRepository.users(_id).delete(where);
   }
 }
