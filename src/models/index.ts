@@ -3,3 +3,4 @@ export * from './user.model';
 export * from './credenciales.model';
 export * from './credenciales-cambio-clave.model';
 export * from './recuperar-clave.model';
+export * from './notificaciones.model';

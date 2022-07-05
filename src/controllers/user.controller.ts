@@ -21,11 +21,12 @@ import {
 import {
   Credenciales,
   CredencialesCambioClave,
+  Notificaciones,
   RecuperarClave,
   User,
 } from '../models';
 import {UserRepository} from '../repositories';
-import {AdministradorDeClavesService} from '../services';
+import {AdministradorDeClavesService, NotificacionesService} from '../services';
 
 export class UserController {
   constructor(
@@ -33,6 +34,8 @@ export class UserController {
     public userRepository: UserRepository,
     @service(AdministradorDeClavesService)
     public servicioClaves: AdministradorDeClavesService,
+    @service(NotificacionesService)
+    public serviciosNotificaciones: NotificacionesService,
   ) {}
 
   @post('/users')
@@ -55,6 +58,13 @@ export class UserController {
   ): Promise<User> {
     const clave = this.servicioClaves.GenerarClave();
     console.log(clave);
+    /*siste de enviar al correo*/
+    const notificacion = new Notificaciones();
+    notificacion.destinatario = user.correo;
+    notificacion.asunto = 'registro en el sistema';
+    notificacion.mensaje = `Hola ${user.nombre}<br/> su clave de acceso al sistema es : ${clave} y su usuario es el correo electronico`;
+    this.serviciosNotificaciones.enviarCorreo(notificacion);
+    /*hasta esta parte es el bloque */
     const claveCifrada = this.servicioClaves.Cifrar(clave);
     console.log(claveCifrada);
     user.clave = claveCifrada;
@@ -228,7 +238,13 @@ export class UserController {
         usuario.clave = datos.nueva_clave;
         console.log(datos.nueva_clave);
         await this.userRepository.updateById(datos._id, usuario);
-        // enviar email al usuario cambio de contraseña
+        /*siste de enviar al correo*/
+        const notificacion = new Notificaciones();
+        notificacion.destinatario = usuario.correo;
+        notificacion.asunto = 'cambio de clave';
+        notificacion.mensaje = `Hola ${usuario.nombre}<br/> se modificado su contraseña en el sistema`;
+        this.serviciosNotificaciones.enviarCorreo(notificacion);
+        /*hasta esta parte es el bloque */
         return true;
       } else {
         return false;
