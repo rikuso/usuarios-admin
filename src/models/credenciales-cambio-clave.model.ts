@@ -21,7 +21,6 @@ export class CredencialesCambioClave extends Model {
   })
   nueva_clave: string;
 
-
   constructor(data?: Partial<CredencialesCambioClave>) {
     super(data);
   }
@@ -31,4 +30,5 @@ export interface CredencialesCambioClaveRelations {
   // describe navigational properties here
 }
 
-export type CredencialesCambioClaveWithRelations = CredencialesCambioClave & CredencialesCambioClaveRelations;
+export type CredencialesCambioClaveWithRelations = CredencialesCambioClave &
+  CredencialesCambioClaveRelations;

@@ -26,7 +26,11 @@ import {
   User,
 } from '../models';
 import {UserRepository} from '../repositories';
-import {AdministradorDeClavesService, NotificacionesService} from '../services';
+import {
+  AdministradorDeClavesService,
+  NotificacionesService,
+  UsuariosService,
+} from '../services';
 
 export class UserController {
   constructor(
@@ -36,6 +40,8 @@ export class UserController {
     public servicioClaves: AdministradorDeClavesService,
     @service(NotificacionesService)
     public serviciosNotificaciones: NotificacionesService,
+    @service(UsuariosService)
+    private usuariosService: UsuariosService, //@service(DuplicidadService) //public duplicados: DuplicidadService,
   ) {}
 
   @post('/users')
@@ -57,8 +63,10 @@ export class UserController {
     user: Omit<User, '_id'>,
   ): Promise<User> {
     const clave = this.servicioClaves.GenerarClave();
-    console.log(clave);
+    //console.log(clave);
     /*siste de enviar al correo*/
+    //this.duplicados.datosDuplicados(user);
+
     const notificacion = new Notificaciones();
     notificacion.destinatario = user.correo;
     notificacion.asunto = 'registro en el sistema';
@@ -66,7 +74,7 @@ export class UserController {
     this.serviciosNotificaciones.enviarCorreo(notificacion);
     /*hasta esta parte es el bloque */
     const claveCifrada = this.servicioClaves.Cifrar(clave);
-    console.log(claveCifrada);
+    // console.log(claveCifrada);
     user.clave = claveCifrada;
     return this.userRepository.create(user);
   }
@@ -180,19 +188,15 @@ export class UserController {
   })
   async identificar(
     @requestBody() credenciales: Credenciales,
-  ): Promise<User | null> {
-    const usuario = await this.userRepository.findOne({
-      where: {
-        correo: credenciales.usuario,
-        clave: credenciales.clave,
-      },
-    });
+  ): Promise<object> {
+    let usuario = await this.usuariosService.validarCredenciales(credenciales);
+    let token = '';
     if (usuario) {
-      // Consumir el MS de token y generar uno nuevo
-      // se asignara ese token a la respuesta para el cliente
       usuario.clave = '';
+
+      token = await this.usuariosService.crearToke(usuario);
     }
-    return usuario;
+    return {token: token, usuario: usuario};
   }
   @post('/recuperar-clave', {
     responses: {
@@ -222,6 +226,7 @@ export class UserController {
     }
     return false;
   }
+
   @post('/cambiar-clave', {
     responses: {
       '200': {
